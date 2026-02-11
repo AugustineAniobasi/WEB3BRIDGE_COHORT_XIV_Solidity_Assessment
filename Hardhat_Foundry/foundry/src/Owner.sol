@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-contract Counter {
-    uint256 public number;
+contract Owner {
+    address public owner;
 
-    function setNumber(uint256 newNumber) public {
-        number = newNumber;
+    constructor() {
+        owner =msg.sender;
     }
 
-    function increment() public {
-        number++;
+    function changeOwner(address newOwner) public {
+        require(msg.sender == owner, "Only the owner can change the owner");
+        owner = newOwner;
     }
+
+    function getOwner() public view returns (address){
+        return owner;
+    }
+
 }
