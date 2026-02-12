@@ -40,7 +40,7 @@ Throughout the cohort, I am building competence in:
 ---
 
 ## 📂 Repository Structure
-
+```
 WEB3BRIDGE_COHORT_XIV_Solidity_Assessment/
 │
 ├── Celo_Testnet/                         # Projects deployed to Celo Sepolia
@@ -80,7 +80,7 @@ WEB3BRIDGE_COHORT_XIV_Solidity_Assessment/
 │   └── README.md                         # Lisk Arc Testnet overview
 │
 ├── README.md                             # Root repository documentation
-
+```
 
 Each project folder contains its own detailed README explaining:
 - Project purpose
