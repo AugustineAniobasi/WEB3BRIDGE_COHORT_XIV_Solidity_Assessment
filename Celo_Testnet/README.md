@@ -6,4 +6,4 @@
 
 ## Celo Testnet Contract Address (Hardhat):0xf99145D7c82c8d5b147981cC6D787869623eF2d0
 
-## Celo Testnet Contract Address (Foundry):
+## Celo Testnet Contract Address (Foundry):0x19677500406657E4F835F6A101685a1186515d2F

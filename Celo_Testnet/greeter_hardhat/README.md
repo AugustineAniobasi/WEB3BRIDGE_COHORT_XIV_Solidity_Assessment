@@ -1,10 +1,15 @@
-# 🟢 Greeter Smart Contract (Hardhat + Celo Sepolia)
+# 🟢 Greeter Smart Contract
+## 🌐 Live Deployment
+
+Contract deployed on **Celo Sepolia**  
+Address: `0xf99145D7c82c8d5b147981cC6D787869623eF2d0`
+
 
 A minimal smart contract written in **Solidity (0.8.30)** that allows users to store and retrieve a message on-chain.
 
 This project demonstrates:
 
-* Smart contract deployment using **Foundry**
+* Smart contract deployment using **hardhat**
 * Interaction with contracts on **Celo Sepolia Testnet**
 * Proper environment configuration using `.env`
 * Basic state management in Solidity
