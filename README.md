@@ -106,10 +106,12 @@ Each project folder contains its own detailed README explaining:
 ## 🌍 Networks Used
 
 - Celo Sepolia Testnet
-- Ethereum Testnets
+- Ethereum Sepolia  Testnets
+- Lisk Sepolia Testnets
+- Arc Testnets
 - Local Hardhat Network
 - Foundry Anvil
-
+- 
 ---
 
 ## 📈 Progress Tracking
@@ -132,6 +134,8 @@ Some featured projects:
 
 - Greeter (Hardhat + Celo Sepolia)
 - Greeter (Foundry + Celo Sepolia)
+- Owner (Hardhat + Lisk Sepolia, Arc testnet)
+- Owner (Foundry + Lisk Sepolia, Arc testnet)
 - Upcoming: Secure Voting Contract
 - Upcoming: ERC20 Token Implementation
 
