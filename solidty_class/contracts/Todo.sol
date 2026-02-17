@@ -4,20 +4,22 @@ pragma solidity ^0.8.3;
 contract Todo {
 	
 	struct Task {
+
 	uint8 id;
 	string title;
 	bool isComplete;
 	uint256 time_completed;
+
 	}
 
 	Task[] public tasks;
-	uint todo_id;
+	uint8 todo_id;
 
 
 	function createTask(string memory _title) external {
-	uint8 id = todo_id + 1; //todo_id = todo_id + 1
-	Task memory task = Task({id: id, title: _title. isComplete:false, time_completed: 0})//id: todo_id
-	tasks.push(task);	
+		todo_id  = todo_id + 1;
+		Task memory task = Task({id: todo_id, title: _title. isComplete:false, time_completed: block.timestamp});
+		tasks.push(task);	
 	
 	}
 
@@ -33,6 +35,15 @@ contract Todo {
 			}	
 		}
 	}
+
+	function update(string memory _title, uint8 _id) external {
+		if (tasks[_id-1].id == _id ){
+			tasks[_id-1].title == _title;
+			tasks[_id-1].time_completed = block.timestamp;
+		}
+
+	}
+
 
 	function deleteTask()external{
 		for (uint8 i; i < tasks.length; i++){
