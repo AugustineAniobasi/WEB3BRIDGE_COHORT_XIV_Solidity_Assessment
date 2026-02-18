@@ -196,40 +196,6 @@ Mappings behave like:
 > Deterministic storage lookups, not like arrays.
 
 ---
-
-## Execution Model Summary
-
-During a transaction:
-
-1. **Storage**
-
-   * Persistent
-   * Expensive
-   * Survives execution
-
-2. **Memory**
-
-   * Temporary
-   * Cheaper than storage
-   * Cleared after execution
-
-3. **Mappings**
-
-   * Storage-only
-   * Key-value lookup via hashing
-   * No iteration capability
-
----
-
-## Conceptual Understanding
-
-You can think of:
-
-* **Storage** → Hard drive (permanent)
-* **Memory** → RAM (temporary)
-* **Mapping** → Indexed database lookup
-* **Struct** → Custom data container
-* **Array** → Ordered collection
 ---
 
 ```

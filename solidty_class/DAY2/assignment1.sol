@@ -1,18 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/**
- * @title ERC20 (from scratch, no libraries)
- * @notice Minimal, standards-compliant ERC-20 implementation with metadata.
- * @dev Includes: name, symbol, decimals, totalSupply, balanceOf, transfer,
- *      allowance, approve, transferFrom + optional increase/decreaseAllowance.
- */
 contract ERC20 {
-    // ----------- Events (ERC-20) -----------
+    
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
-    // ----------- Storage -----------
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
 
@@ -22,14 +15,12 @@ contract ERC20 {
     string private _symbol;
     uint8 private _decimals;
 
-    // ----------- Constructor -----------
     constructor(string memory name_, string memory symbol_, uint8 decimals_) {
         _name = name_;
         _symbol = symbol_;
         _decimals = decimals_;
     }
 
-    // ----------- ERC-20 Metadata -----------
     function name() public view returns (string memory) {
         return _name;
     }
@@ -42,7 +33,6 @@ contract ERC20 {
         return _decimals;
     }
 
-    // ----------- ERC-20 Core -----------
     function totalSupply() public view returns (uint256) {
         return _totalSupply;
     }
@@ -51,32 +41,20 @@ contract ERC20 {
         return _balances[account];
     }
 
-    /**
-     * @notice Transfer tokens from msg.sender to `to`.
-     */
     function transfer(address to, uint256 amount) public returns (bool) {
         _transfer(msg.sender, to, amount);
         return true;
     }
 
-    /**
-     * @notice Returns how many tokens `spender` can spend from `owner`.
-     */
     function allowance(address owner, address spender) public view returns (uint256) {
         return _allowances[owner][spender];
     }
 
-    /**
-     * @notice Approve `spender` to spend `amount` from msg.sender.
-     */
     function approve(address spender, uint256 amount) public returns (bool) {
         _approve(msg.sender, spender, amount);
         return true;
     }
 
-    /**
-     * @notice Transfer tokens from `from` to `to` using allowance from `from` to msg.sender.
-     */
     function transferFrom(address from, address to, uint256 amount) public returns (bool) {
         uint256 currentAllowance = _allowances[from][msg.sender];
         require(currentAllowance >= amount, "ERC20: insufficient allowance");
@@ -90,7 +68,6 @@ contract ERC20 {
         return true;
     }
 
-    // ----------- Optional Allowance Helpers -----------
     function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
         _approve(msg.sender, spender, _allowances[msg.sender][spender] + addedValue);
         return true;
@@ -105,7 +82,6 @@ contract ERC20 {
         return true;
     }
 
-    // ----------- Internal Logic -----------
     function _transfer(address from, address to, uint256 amount) internal {
         require(from != address(0), "ERC20: transfer from zero");
         require(to != address(0), "ERC20: transfer to zero");
@@ -130,9 +106,6 @@ contract ERC20 {
         emit Approval(owner, spender, amount);
     }
 
-    /**
-     * @dev Internal mint function (you can expose this with access control if desired).
-     */
     function _mint(address to, uint256 amount) internal {
         require(to != address(0), "ERC20: mint to zero");
         require(amount > 0, "ERC20: amount zero");
@@ -143,9 +116,6 @@ contract ERC20 {
         emit Transfer(address(0), to, amount);
     }
 
-    /**
-     * @dev Internal burn function (you can expose this with access control if desired).
-     */
     function _burn(address from, uint256 amount) internal {
         require(from != address(0), "ERC20: burn from zero");
         require(amount > 0, "ERC20: amount zero");
@@ -162,11 +132,6 @@ contract ERC20 {
     }
 }
 
-/**
- * @title ExampleToken
- * @notice Example deployment that mints initial supply to deployer.
- * @dev Remove if you only want the base ERC20 contract.
- */
 contract ExampleToken is ERC20 {
     constructor(
         string memory name_,
