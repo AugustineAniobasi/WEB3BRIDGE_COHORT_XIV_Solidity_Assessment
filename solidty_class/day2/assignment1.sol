@@ -34,7 +34,7 @@ contract PacoinToken is IERC20 {
     string private _name;
     uint8 private _decimals;
     string private _symbol;
-    uint256 private _totalSUpply;
+    uint256 private _totalSupply;
 
     mapping[address => uint256] private _balances;
     mapping[address => mapping[address => uint256] private _allowances;
@@ -42,11 +42,12 @@ contract PacoinToken is IERC20 {
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    constructor() {
+    constructor(uint256 _initialSupply) {
         _name = "Pacoin";
         _decimals = 18;
         _symbol = "PAC";
-        
+        _totalSupply = _initialSupply;
+        _balances[msg.sender] = _initialSupply;
 
     }
 
