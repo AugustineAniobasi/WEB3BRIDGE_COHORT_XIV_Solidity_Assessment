@@ -2,13 +2,14 @@
 pragma solidity ^0.8.0;
 
 /**
- *@title IERC20 contains functions my contract must implement
+ *@title IERC20 contains functions and Events any ERC20 token  must implement
  *@notice standard interface for ERC20 fungible token
  *@dev defines the required functions and events for ERC20 token
  */
 
 interface IERC20 {
 
+///@notice name()c, symbol(), decimals() are optional functions, you can choose to implement them or not.
     function name() external view returns(string memory);
     function symbol() external view returns(string memory);
     function decimals() external view returns(uint8);
@@ -18,6 +19,9 @@ interface IERC20 {
     function transferFrom(address _from, address _to, uint256 _value) external returns(bool success);
     function approve(address _spender, uint256 _value) external returns(bool success);
     function allowance(address _owner, address _spender) external view returns(uint256 remaining);
+
+    event Transfer(address indexed _from, address indexed _to, uint256 _value);
+    event Approval(address indexed _owner,address indexed _spender, uint256 _value);
 
 }
 
@@ -35,6 +39,7 @@ contract PacoinToken is IERC20 {
     uint8 private _decimals;
     string private _symbol;
     uint256 private _totalSupply;
+    address private _owner;
 
     mapping[address => uint256] private _balances;
     mapping[address => mapping[address => uint256] private _allowances;
@@ -42,13 +47,30 @@ contract PacoinToken is IERC20 {
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    constructor(uint256 _initialSupply) {
+    constructor(uint256 _initSupply) {
         _name = "Pacoin";
         _decimals = 18;
         _symbol = "PAC";
-        _totalSupply = _initialSupply;
-        _balances[msg.sender] = _initialSupply;
 
+        _owner = msg.sender;
+
+        _mint(msg.sender, _initSupply)
+
+    }
+
+    function mint(address _to, uint256 _value) public onlyOwner returns(bool){
+        _mint(_to,_value);
+        return true;
+    }
+
+    modifier onlyOwner(){
+        require(msg.sender == _owner, "Only the owner is allowed to call this function");
+        _;
+    }
+
+    function getOwner() public returns(address){
+
+        return _owner;
     }
 
     /**
@@ -58,37 +80,25 @@ contract PacoinToken is IERC20 {
      *The functions above are compulsory, all must be implemented
      */
 
-    /**
-     *@notice display the token name
-     *@return gives the name of the token
-     */
+   /// @notice Returns the Token name 'Pacoin'
 
     function name() public view returns(string memory) {
         return _name;
     }
  
-    /**
-     *@notice display the token symbol
-     *@return gives the token symbol
-     */
+    ///@notice Returns the Token symbol 'PAC'
 
     function symbol() public view returns(string memory) {
         return _symbol;
     }
     
-    /**
-     *@notice display the number of  decimal places used by the Token
-     *@return the number of decimal place used by the token
-     */
+    ///@notice Returns the number of decimals used by the token '18'
 
     function decimals() public view returns(uint8) {
         return _decimals;
     }
 
-    /**
-     *@notice Give the total amount of token minted
-     *@return Gives the total amount of token minted
-     */
+    ///@notice Returns the total token supplied
 
     function totalSupply() public view returns(uint256) {
 
@@ -96,14 +106,11 @@ contract PacoinToken is IERC20 {
 
     }
 
-    /**
-     *@notice gets the balance of '_owner'
-     *@return displays the balance of '_owner'
-     */
+    ///@balanceOf Returns the amount of token owned by a specific address
     
-    function balanceOf(address _owner) public view returns(uint256 balance) {
+    function balanceOf(address _account) public view returns(uint256 balance) {
 
-        return  _balances[_owner];
+        return  _balances[_account];
     } 
 
     /**
@@ -122,12 +129,9 @@ contract PacoinToken is IERC20 {
         require(_to != address(0),"Address not allowed to receive token");
         require(msg.sender != address(0),"Address zero not allowed to send token");
 
-        _balances[msg.sender] = _balances[msg.sender] - _value;
-        _balances[_to] = _balances[_to] + _value;
+        _transfer(msg.sender, _to, _value);
 
         return true;
-
-        emit Transfer(msg.sender, _to, _value);
     }
     
     /**
@@ -142,8 +146,7 @@ contract PacoinToken is IERC20 {
     function transferFrom(address _from, address _to, uint256 _value) public returns(bool success) {
         require(_allowances[_from][msg.sender] >= _value,"Token not yet approved for spending");
 
-        _balances[_from] = _balances[_from] - _value;
-        _balnces[_to] = _balances[_to] + _value;
+        _transfer(_from, _to, _value);
 
         _allowances[_from][msg.sender] = _allowances[_from][msg.sender] - _value;
 
@@ -170,13 +173,44 @@ contract PacoinToken is IERC20 {
 
     /**
      *@notice display amount of token left from the approved Tokemn
-     *@param _owner the address that gives approval for a certain amount of token to be spent
+     *@param _account the address that gives approval for a certain amount of token to be spent
      *@param _spender the address responsible for spending the approved token
      *@return displays the allowance left from the approved token
      */
 
 
-    function allowance(address _owner, address _spender) public view returns(uint256 remaining) {
+    function allowance(address _account, address _spender) public view returns(uint256 remaining) {
 
-        remaining = _allowances[_owner][_spender];
+        remaining = _allowances[_account][_spender];
     }
+    /**
+     *@notice a helper function used to transfer token from one account to another
+     *@dev _from account is increased by the value of the token
+     *     _to account is decreased by the value of the token
+     *      Emits a {Transfer} event if successful
+     *param _from address of account token is transferred from
+     *param _to address of account token is transferred to
+     *
+
+    function _transfer(address _from, address _to,uint256 _value) private {
+        
+        _balances[_from] = _balances[_from] - _value;
+        _balances[_to] = _balances[_to] + _value;
+
+        emit Transfer(_from, _to,_value);
+
+    }
+    
+    function _mint(address _to, uint256 _value) private {
+    
+        _balances[_to] = _balances[_to] + _value;
+        _totalSupply = _totalSupply + _value;
+
+        emit Transfer(address(0), _to, _value);
+
+    }
+    
+
+
+
+}
