@@ -2,26 +2,29 @@
 pragma solidity ^0.8.0;
 
 /**
- *@title IERC20 contains functions and Events any ERC20 token  must implement
+ *@title IERC20  comprises of functions and Events that should be in an ERC20 Token contract
  *@notice standard interface for ERC20 fungible token
- *@dev defines the required functions and events for ERC20 token
  */
 
 interface IERC20 {
 
-///@notice name()c, symbol(), decimals() are optional functions, you can choose to implement them or not.
+///@notice name(), symbol(), decimals() are optional functions for an ERC20 Token contract.
+
     function name() external view returns(string memory);
     function symbol() external view returns(string memory);
     function decimals() external view returns(uint8);
+
+///@notice totalSupply(), balanceOf(),transfer(), transferFrom(), approve(), allowance() are compulsory functions that must be implemented in an ERC20 Token contract
+
     function totalSupply() external view returns(uint256);
-    function balanceOf(address _owner) external view returns(uint256 balance);
+    function balanceOf(address _account) external view returns(uint256 balance);
     function transfer(address _to, uint256 _value) external returns(bool success);
     function transferFrom(address _from, address _to, uint256 _value) external returns(bool success);
     function approve(address _spender, uint256 _value) external returns(bool success);
-    function allowance(address _owner, address _spender) external view returns(uint256 remaining);
+    function allowance(address _account, address _spender) external view returns(uint256 remaining);
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
-    event Approval(address indexed _owner,address indexed _spender, uint256 _value);
+    event Approval(address indexed _account, address indexed _spender, uint256 _value);
 
 }
 
@@ -30,14 +33,15 @@ interface IERC20 {
  *@notice Implement the ERC20 standard for PacoinToken
  *@dev includes standard approval, allowance and transfer mechanism
  *     implement the IERC20 token interface with 18 decimals
+ *     Emits {Approval} and {Transfer} events whenever a transfer or approval function is called 
  */
 
 
 contract PacoinToken is IERC20 {
 
     string private _name;
-    uint8 private _decimals;
     string private _symbol;
+    uint8 private _decimals;
     uint256 private _totalSupply;
     address private _owner;
 
@@ -54,7 +58,7 @@ contract PacoinToken is IERC20 {
 
         _owner = msg.sender;
 
-        _mint(msg.sender, _initSupply)
+        _mint(msg.sender, _initSupply);
 
     }
 
@@ -68,7 +72,7 @@ contract PacoinToken is IERC20 {
         _;
     }
 
-    function getOwner() public returns(address){
+    function getOwner() public onlyOwner returns(address){
 
         return _owner;
     }
@@ -126,7 +130,7 @@ contract PacoinToken is IERC20 {
 
     function transfer(address _to, uint256 _value) public returns(bool success) {
         require(_balances[msg.sender] >= _value,"insufficient fund");
-        require(_to != address(0),"Address not allowed to receive token");
+        require(_to != address(0),"Address zero not allowed to receive token");
         require(msg.sender != address(0),"Address zero not allowed to send token");
 
         _transfer(msg.sender, _to, _value);
@@ -145,7 +149,8 @@ contract PacoinToken is IERC20 {
 
     function transferFrom(address _from, address _to, uint256 _value) public returns(bool success) {
         require(_allowances[_from][msg.sender] >= _value,"Token not yet approved for spending");
-
+        require(_to != address(0), "Address zero cannot receive approved token");
+        
         _transfer(_from, _to, _value);
 
         _allowances[_from][msg.sender] = _allowances[_from][msg.sender] - _value;
@@ -157,22 +162,25 @@ contract PacoinToken is IERC20 {
      *@notice approves an address to spend a certain amount of the callers token
      *@dev the callers balance must be greater than the token approved
      *     Emits a {Approval} event if successful
+     *@param _spender address approved to spend token on behalf of msg.sender
+     *@param _value amount of token approved to be spent by '_spender'
      *@return True if the approval completes
      */
 
     
     function approve(address _spender, uint _value) public returns(bool success) {
         require(_balances[msg.sender] >= _value,"insufficient funds to approve");
+        require(_spender != address(0), "Approved address cannot be address zero";
 
         _allowances[msg.sender][_spender] = _value 
+    
+        emit Approval(msg.sender, _spender, _value);
 
         return true;
-    
-        emit Transfer(msg.sender, _spender, _value);
     }
 
     /**
-     *@notice display amount of token left from the approved Tokemn
+     *@notice display amount of token left from the approved Token
      *@param _account the address that gives approval for a certain amount of token to be spent
      *@param _spender the address responsible for spending the approved token
      *@return displays the allowance left from the approved token
@@ -183,14 +191,16 @@ contract PacoinToken is IERC20 {
 
         remaining = _allowances[_account][_spender];
     }
+
     /**
      *@notice a helper function used to transfer token from one account to another
      *@dev _from account is increased by the value of the token
      *     _to account is decreased by the value of the token
      *      Emits a {Transfer} event if successful
-     *param _from address of account token is transferred from
-     *param _to address of account token is transferred to
-     *
+     *@param _from address of account token is transferred from
+     *@param _to address of account token is transferred to
+     *@param _value amount of token to be transferred
+     */
 
     function _transfer(address _from, address _to,uint256 _value) private {
         
@@ -201,6 +211,15 @@ contract PacoinToken is IERC20 {
 
     }
     
+    /**
+     *@notice a helper function that mints token from thin air
+     *@dev _to account is increased by the amount of token '_value'
+     *     _totalSupply wis ioncreased by the amount of token '_value'
+     *      Emits a {Transfer} event if successful
+     *@param _to address of account token is minted to
+     *@param _value amount of token to be transferred
+     */
+ 
     function _mint(address _to, uint256 _value) private {
     
         _balances[_to] = _balances[_to] + _value;
@@ -210,7 +229,5 @@ contract PacoinToken is IERC20 {
 
     }
     
-
-
 
 }
