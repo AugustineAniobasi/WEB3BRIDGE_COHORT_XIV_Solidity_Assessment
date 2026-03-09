@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "../security/AccessControlModule.sol";
+import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {AccessControlModule} from "../security/AccessControlModule.sol";
 
 abstract contract MerkleClaimModule is AccessControlModule {
 

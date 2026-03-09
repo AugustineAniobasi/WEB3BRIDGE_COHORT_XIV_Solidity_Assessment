@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "../security/AccessControlModule.sol";
+import {AccessControlModule} from "../security/AccessControlModule.sol";
 
 abstract contract WithdrawModule is AccessControlModule {
 

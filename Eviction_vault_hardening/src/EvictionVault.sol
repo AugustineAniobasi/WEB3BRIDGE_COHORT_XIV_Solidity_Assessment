@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./modules/DepositModule.sol";
-import "./modules/SafeWIthdraw.sol";
-import "./modules/MerkleClaimModule.sol";
-import "./modules/WithdrawModule.sol";
-import "./security/PausableModule.sol";
+import {DepositModule} from "./modules/DepositModule.sol";
+import {SafeWithdraw} from "./modules/SafeWithdraw.sol";
+import {MerkleClaimModule} from"./modules/MerkleClaimModule.sol";
+import {WithdrawModule} from "./modules/WithdrawModule.sol";
+import {PausableModule} from "./security/PausableModule.sol";
 
 contract EvictionVault is DepositModule, SafeWithdraw, MerkleClaimModule, WithdrawModule, PausableModule {
 

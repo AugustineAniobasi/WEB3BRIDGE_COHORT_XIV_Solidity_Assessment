@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "../core/VaultStorage.sol";
+import {VaultStorage} from "../core/VaultStorage.sol";
 
 abstract contract SafeWithdraw is VaultStorage {
 
