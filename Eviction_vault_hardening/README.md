@@ -3,8 +3,11 @@
 ## Refactor
 
 The original monolithic contract w:
+
 ```
-<img width="135" height="308" alt="image" src="https://github.com/user-attachments/assets/590ae376-147d-4cbe-9024-6557a496e7b8" />
+<p align="center">
+  <img src="./struct.png" width="135" height="308" alt="Project Structure">
+</p>
 
 - DepositModule
 - SafeWithdraw
@@ -14,7 +17,9 @@ The original monolithic contract w:
 - VaultStorage
 
 ```
+
 ## Security Fixes
+
 ```
 1. setMerkleRoot restricted to owners
 2. emergencyWithdrawAll restricted to owners
@@ -23,7 +28,9 @@ The original monolithic contract w:
 5. modular architecture implemented
 6. pause/unpause restricted
 ```
+
 ## Testing
+
 ```
 4 positive tests implemented using Foundry.
 
