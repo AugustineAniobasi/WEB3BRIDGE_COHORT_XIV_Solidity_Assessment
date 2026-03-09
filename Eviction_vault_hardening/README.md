@@ -1,66 +1,30 @@
-## Foundry
+# Eviction Vault Hardening
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## Refactor
 
-Foundry consists of:
+The original monolithic contract w:
+,,,
+- DepositModule
+- SafeWithdraw
+- MerkleClaimModule
+- WithdrawModule
+- PausableModule
+- VaultStorage
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+,,,
+## Security Fixes
+,,,
+1. setMerkleRoot restricted to owners
+2. emergencyWithdrawAll restricted to owners
+3. tx.origin removed
+4. transfer replaced with call
+5. modular architecture implemented
+6. pause/unpause restricted
+,,,
+## Testing
+,,,
+4 positive tests implemented using Foundry.
 
-## Documentation
-
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+forge build ✔
+forge test ✔
+,,,
