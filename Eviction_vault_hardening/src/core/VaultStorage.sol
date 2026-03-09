@@ -27,7 +27,7 @@ abstract contract VaultStorage {
 
     bytes32 public merkleRoot;
     
-    mapping(address => uint256) public claimed;
+    mapping(address => bool) public claimed;
 
     uint256 public constant TIMELOCK_DURATION =1 hours;
 
