@@ -4,6 +4,8 @@
 
 The original monolithic contract w:
 ```
+<img width="135" height="308" alt="image" src="https://github.com/user-attachments/assets/590ae376-147d-4cbe-9024-6557a496e7b8" />
+
 - DepositModule
 - SafeWithdraw
 - MerkleClaimModule
