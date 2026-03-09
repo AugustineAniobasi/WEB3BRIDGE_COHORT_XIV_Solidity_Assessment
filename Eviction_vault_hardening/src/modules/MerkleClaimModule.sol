@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "../core/VaultStorage.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "../security/AccessControlModule.sol";
 
-abstract contract MerkleClaimModule is VaultStorage {
-
-    modifier onlyOwner() {
-        require(isOwner[msg.sender], "not owner");
-        _;
-    }
+abstract contract MerkleClaimModule is AccessControlModule {
 
     function setMerkleRoot(bytes32 root) external onlyOwner {
         merkleRoot = root;
