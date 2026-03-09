@@ -37,3 +37,8 @@ The original monolithic contract w:
 forge build ✔
 forge test ✔
 ```
+```
+<p align="center">
+  <img src="./struct.png" width="135" height="308" alt="Project Structure">
+</p>
+```
