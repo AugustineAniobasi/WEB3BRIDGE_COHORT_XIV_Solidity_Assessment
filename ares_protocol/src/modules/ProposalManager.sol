@@ -1,65 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {IProposalManager} from "../interfaces/IProposalManager.sol"
-/**
- * @title ProposalManager
- * @notice Handles creation and tracking of treasury proposals for the ARES Protocol.
- *         Proposals enter a commit phase and cannot be executed immediately.
- */
+import {IProposalManager} from "../interfaces/IProposalManager.sol";
+
 contract ProposalManager is IProposalManager {
 
-///@notice defines the lifecycle of a proposal
-
-    enum ProposalState {
-        NONE,
-        COMMITTED,
-        APPROVED,
-        QUEUED,
-        EXECUTED,
-        CANCELLED
-    }
-
-///@notice defines a unique treasury proposal
-
-    struct Proposal {
-        address proposer;
-        bytes32 proposalId;
-        address target;
-        uint256 value;
-        bytes data;
-        uint256 nonce;
-        uint256 timestamp;
-        ProposalState state;
-    }
-
-
     mapping(bytes32 => Proposal) public proposals;
-
-/// @notice Nonce tracking for each proposer (replay protection)
     mapping(address => uint256) public proposerNonce;
+    
+    address public controller;
 
-
-
-    event ProposalCommitted(bytes32 indexed proposalId,address indexed proposer,address indexed target,uint256 value,bytes data);
-
-    function computeProposalId(address target,uint256 value,bytes memory data,uint256 nonce) public view returns (bytes32) {
-        
-        return keccak256(abi.encode(target,value,data,nonce,block.chainid));
+    function setController(address _controller) external {
+        require(controller == address(0), "CONTROLLER_ALREADY_SET");
+        controller = _controller;
     }
 
+    function computeProposalId(address target, uint256 value, bytes memory data, uint256 nonce) public view returns (bytes32) {
+        return keccak256(abi.encode(target, value, data, nonce, block.chainid));
+    }
 
-/**
- * @notice Commit a new proposal to the system
- * @dev Proposals cannot be executed immediately
- */
-    function commitProposal(address target,uint256 value,bytes calldata data,uint256 nonce) external returns (bytes32 proposalId) {
-
+    function commitProposal(address target, uint256 value, bytes calldata data, uint256 nonce) external returns (bytes32 proposalId) {
         require(nonce == proposerNonce[msg.sender], "INVALID_NONCE");
 
-        proposalId = computeProposalId(target,value,data,nonce);
-
-        require(proposals[proposalId].state == ProposalState.NONE,"PROPOSAL_ALREADY_EXISTS");
+        proposalId = computeProposalId(target, value, data, nonce);
+        require(proposals[proposalId].state == ProposalState.NONE, "PROPOSAL_ALREADY_EXISTS");
 
         proposals[proposalId] = Proposal({
             proposer: msg.sender,
@@ -73,17 +37,20 @@ contract ProposalManager is IProposalManager {
         });
 
         proposerNonce[msg.sender]++;
-
-        emit ProposalCommitted(proposalId,msg.sender,target,value,data);
+        emit ProposalCommitted(proposalId, msg.sender, target, value, data);
     }
 
-    function getProposal(bytes32 proposalId) external view returns (Proposal memory)
-    {
+    function updateProposalState(bytes32 proposalId, uint8 newState) external {
+        require(msg.sender == controller, "ONLY_CONTROLLER");
+        require(proposals[proposalId].state != ProposalState.NONE, "DOES_NOT_EXIST");
+        proposals[proposalId].state = ProposalState(newState);
+    }
+
+    function getProposal(bytes32 proposalId) external view returns (Proposal memory) {
         return proposals[proposalId];
     }
 
-    function proposalExists(bytes32 proposalId) external view returns (bool)
-    {
+    function proposalExists(bytes32 proposalId) external view returns (bool) {
         return proposals[proposalId].state != ProposalState.NONE;
     }
 }

@@ -29,6 +29,10 @@ interface IProposalManager {
 
     function proposerNonce(address proposer) external view returns (uint256);
 
+    function setController(address _controller) external;
+    
+    function updateProposalState(bytes32 proposalId, uint8 newState) external;
+
     function computeProposalId(address target, uint256 value, bytes memory data, uint256 nonce ) external view returns (bytes32);
 
     function commitProposal( address target, uint256 value, bytes calldata data, uint256 nonce ) external returns (bytes32 proposalId);

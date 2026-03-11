@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {IGovernanceGuard} from "../interfaces/IGovernanceGuard.sol"
+import {IGovernanceGuard} from "../interfaces/IGovernanceGuard.sol";
 
 contract GovernanceGuard is IGovernanceGuard {
 

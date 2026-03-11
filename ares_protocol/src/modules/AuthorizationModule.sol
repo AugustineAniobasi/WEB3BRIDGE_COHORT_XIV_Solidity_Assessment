@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {IAuthorizationModule} from "../interfaces/IAuthorizationModule"
+import {IAuthorizationModule} from "../interfaces/IAuthorizationModule.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract AuthorizationModule  is IAuthorizationModule {
