@@ -1,3 +1,6 @@
 [submodule "Eviction_vault_hardening/lib/openzeppelin-contracts"]
 	path = Eviction_vault_hardening/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "ares_protocol/lib/openzeppelin-contracts"]
+	path = ares_protocol/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts

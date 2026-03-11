@@ -3,8 +3,8 @@ pragma solidity ^0.8.23;
 
 /**
  * @title ProposalHash
- * @notice ensures a collision-resistant hashing mechanism for treasury actions.
- * @dev This library implements a deterministic hashing function to represent unique treasury proposals
+ * @notice This library hash the proposal details into a single 32 bytes string.
+ * @dev compute() ensures a collision-resistant hashing mechanism for treasury actions.
  */
 
 library ProposalHash {
