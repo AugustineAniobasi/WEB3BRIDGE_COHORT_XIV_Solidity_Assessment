@@ -1,58 +1,63 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-contract TimelockEngine {
+import {ITimelockEngine} from "../interfaces/ ITimelockEngine.sol"
+
+contract TimelockEngine is ITimelockEngine {
 
     uint256 public constant MIN_DELAY = 2 days;
+    uint256 public constant GRACE_PERIOD = 14 days;
 
     struct QueuedTransaction {
-        address target;
-        uint256 value;
-        bytes data;
         uint256 executeAfter;
         bool executed;
     }
 
     mapping(bytes32 => QueuedTransaction) public queue;
 
-    function hashTransaction(address target,uint256 value,bytes calldata data,uint256 nonce) public view returns(bytes32) {
+    address public admin;
 
-        return keccak256(abi.encode(target,value,data,nonce,block.chainid));
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "UNAUTHORIZED_QUEUER");
+        _;
     }
 
-    function queueTransaction(address target,uint256 value,bytes calldata data,uint256 nonce) external returns(bytes32){
+    constructor() {
+        admin = msg.sender;
+    }
 
-        bytes32 txId = hashTransaction(target,value,data,nonce);
+    function hashTransaction(address target, uint256 value, bytes calldata data, uint256 nonce) public view returns(bytes32) {
+        return keccak256(abi.encode(target, value, data, nonce, block.chainid));
+    }
 
-        require(queue[txId].executeAfter == 0,"ALREADY_QUEUED");
+    function queueTransaction(address target, uint256 value, bytes calldata data, uint256 nonce) external onlyAdmin returns(bytes32) {
+        bytes32 txId = hashTransaction(target, value, data, nonce);
 
-        uint256 executeTime = block.timestamp + MIN_DELAY;
+        require(queue[txId].executeAfter == 0, "ALREADY_QUEUED");
 
         queue[txId] = QueuedTransaction({
-            target: target,
-            value: value,
-            data: data,
-            executeAfter: executeTime,
+            executeAfter: block.timestamp + MIN_DELAY,
             executed: false
         });
 
         return txId;
     }
 
-    function executeTransaction(bytes32 txId) external {
+    function executeTransaction(address target, uint256 value, bytes calldata data, uint256 nonce) external {
+        
 
+        bytes32 txId = hashTransaction(target, value, data, nonce);
         QueuedTransaction storage txn = queue[txId];
 
-        require(txn.executeAfter != 0,"NOT_QUEUED");
-
-        require(block.timestamp >= txn.executeAfter,"TIMELOCK_ACTIVE");
-
-        require(!txn.executed,"ALREADY_EXECUTED");
+        require(txn.executeAfter != 0, "NOT_QUEUED");
+        require(block.timestamp >= txn.executeAfter, "TIMELOCK_ACTIVE");
+        
+        require(block.timestamp <= txn.executeAfter + GRACE_PERIOD, "TRANSACTION_EXPIRED");
+        require(!txn.executed, "ALREADY_EXECUTED");
 
         txn.executed = true;
 
-        (bool success,) = txn.target.call{value: txn.value}(txn.data);
-
-        require(success,"EXECUTION_FAILED");
+        (bool success, ) = target.call{value: value}(data);
+        require(success, "EXECUTION_FAILED");
     }
 }

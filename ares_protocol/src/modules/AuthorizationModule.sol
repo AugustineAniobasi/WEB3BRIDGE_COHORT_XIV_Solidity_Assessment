@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
+import {IAuthorizationModule} from "../interfaces/IAuthorizationModule"
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-contract AuthorizationModule {
+contract AuthorizationModule  is IAuthorizationModule {
 
     using ECDSA for bytes32;
 
@@ -12,10 +13,7 @@ contract AuthorizationModule {
 
     bytes32 public DOMAIN_SEPARATOR;
 
-    bytes32 public constant APPROVAL_TYPEHASH =
-        keccak256(
-            "Approve(bytes32 proposalId,uint256 nonce,uint256 deadline)"
-        );
+    bytes32 public constant APPROVAL_TYPEHASH = keccak256("Approve(bytes32 proposalId,uint256 nonce,uint256 deadline)");
 
     constructor(address[] memory signers) {
 
@@ -24,10 +22,7 @@ contract AuthorizationModule {
         }
 
         DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                keccak256(
-                    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-                ),
+            abi.encode(keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
                 keccak256(bytes("ARES")),
                 keccak256(bytes("1")),
                 block.chainid,
@@ -36,13 +31,7 @@ contract AuthorizationModule {
         );
     }
 
-    function verifyApproval(
-        address signer,
-        bytes32 proposalId,
-        uint256 nonce,
-        uint256 deadline,
-        bytes calldata signature
-    ) external returns (bool) {
+    function verifyApproval(address signer,bytes32 proposalId, uint256 nonce, uint256 deadline, bytes calldata signature) external returns (bool) {
 
         require(block.timestamp <= deadline, "SIGNATURE_EXPIRED");
 

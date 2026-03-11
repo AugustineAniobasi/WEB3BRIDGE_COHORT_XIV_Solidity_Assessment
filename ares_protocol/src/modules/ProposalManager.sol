@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
+import {IProposalManager} from "../interfaces/IProposalManager.sol"
 /**
  * @title ProposalManager
  * @notice Handles creation and tracking of treasury proposals for the ARES Protocol.
  *         Proposals enter a commit phase and cannot be executed immediately.
  */
-contract ProposalManager {
+contract ProposalManager is IProposalManager {
 
 ///@notice defines the lifecycle of a proposal
 
