@@ -1,0 +1,1260 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+contracts/
+  facets/
+    DiamondCutFacet.sol
+    DiamondLoupeFacet.sol
+    OwnershipFacet.sol
+  interfaces/
+    IDiamondCut.sol
+    IDiamondLoupe.sol
+    IERC165.sol
+    IERC173.sol
+  libraries/
+    LibDiamond.sol
+  upgradeInitializers/
+    DiamondInit.sol
+  Diamond.sol
+script/
+  DiamondUpgradeExample.s.sol
+test/
+  helpers/
+    DiamondUpgradeHelper.sol
+    DiamondUtils.sol
+  deployDiamond.t.sol
+.gitignore
+.gitmodules
+foundry.toml
+README.md
+remappings.txt
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="contracts/facets/DiamondCutFacet.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+/******************************************************************************\
+* Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
+* EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
+/******************************************************************************/
+
+import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
+import { LibDiamond } from "../libraries/LibDiamond.sol";
+
+contract DiamondCutFacet is IDiamondCut {
+    /// @notice Add/replace/remove any number of functions and optionally execute
+    ///         a function with delegatecall
+    /// @param _diamondCut Contains the facet addresses and function selectors
+    /// @param _init The address of the contract or facet to execute _calldata
+    /// @param _calldata A function call, including function selector and arguments
+    ///                  _calldata is executed with delegatecall on _init
+    function diamondCut(
+        FacetCut[] calldata _diamondCut,
+        address _init,
+        bytes calldata _calldata
+    ) external override {
+        LibDiamond.enforceIsContractOwner();
+        LibDiamond.diamondCut(_diamondCut, _init, _calldata);
+    }
+}
+</file>
+
+<file path="contracts/facets/DiamondLoupeFacet.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+/******************************************************************************\
+* Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
+* EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
+/******************************************************************************/
+
+import { LibDiamond } from  "../libraries/LibDiamond.sol";
+import { IDiamondLoupe } from "../interfaces/IDiamondLoupe.sol";
+import { IERC165 } from "../interfaces/IERC165.sol";
+
+contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
+    // Diamond Loupe Functions
+    ////////////////////////////////////////////////////////////////////
+    /// These functions are expected to be called frequently by tools.
+    //
+    // struct Facet {
+    //     address facetAddress;
+    //     bytes4[] functionSelectors;
+    // }
+
+    /// @notice Gets all facets and their selectors.
+    /// @return facets_ Facet
+    function facets() external override view returns (Facet[] memory facets_) {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        uint256 numFacets = ds.facetAddresses.length;
+        facets_ = new Facet[](numFacets);
+        for (uint256 i; i < numFacets; i++) {
+            address facetAddress_ = ds.facetAddresses[i];
+            facets_[i].facetAddress = facetAddress_;
+            facets_[i].functionSelectors = ds.facetFunctionSelectors[facetAddress_].functionSelectors;
+        }
+    }
+
+    /// @notice Gets all the function selectors provided by a facet.
+    /// @param _facet The facet address.
+    /// @return facetFunctionSelectors_
+    function facetFunctionSelectors(address _facet) external override view returns (bytes4[] memory facetFunctionSelectors_) {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        facetFunctionSelectors_ = ds.facetFunctionSelectors[_facet].functionSelectors;
+    }
+
+    /// @notice Get all the facet addresses used by a diamond.
+    /// @return facetAddresses_
+    function facetAddresses() external override view returns (address[] memory facetAddresses_) {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        facetAddresses_ = ds.facetAddresses;
+    }
+
+    /// @notice Gets the facet that supports the given selector.
+    /// @dev If facet is not found return address(0).
+    /// @param _functionSelector The function selector.
+    /// @return facetAddress_ The facet address.
+    function facetAddress(bytes4 _functionSelector) external override view returns (address facetAddress_) {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        facetAddress_ = ds.selectorToFacetAndPosition[_functionSelector].facetAddress;
+    }
+
+    // This implements ERC-165.
+    function supportsInterface(bytes4 _interfaceId) external override view returns (bool) {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        return ds.supportedInterfaces[_interfaceId];
+    }
+}
+</file>
+
+<file path="contracts/facets/OwnershipFacet.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import { LibDiamond } from "../libraries/LibDiamond.sol";
+import { IERC173 } from "../interfaces/IERC173.sol";
+
+contract OwnershipFacet is IERC173 {
+    function transferOwnership(address _newOwner) external override {
+        LibDiamond.enforceIsContractOwner();
+        LibDiamond.setContractOwner(_newOwner);
+    }
+
+    function owner() external override view returns (address owner_) {
+        owner_ = LibDiamond.contractOwner();
+    }
+}
+</file>
+
+<file path="contracts/interfaces/IDiamondCut.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+/******************************************************************************\
+* Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
+* EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
+/******************************************************************************/
+
+interface IDiamondCut {
+    enum FacetCutAction {Add, Replace, Remove}
+    // Add=0, Replace=1, Remove=2
+
+    struct FacetCut {
+        address facetAddress;
+        FacetCutAction action;
+        bytes4[] functionSelectors;
+    }
+
+    /// @notice Add/replace/remove any number of functions and optionally execute
+    ///         a function with delegatecall
+    /// @param _diamondCut Contains the facet addresses and function selectors
+    /// @param _init The address of the contract or facet to execute _calldata
+    /// @param _calldata A function call, including function selector and arguments
+    ///                  _calldata is executed with delegatecall on _init
+    function diamondCut(
+        FacetCut[] calldata _diamondCut,
+        address _init,
+        bytes calldata _calldata
+    ) external;
+
+    event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
+}
+</file>
+
+<file path="contracts/interfaces/IDiamondLoupe.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+/******************************************************************************\
+* Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
+* EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
+/******************************************************************************/
+
+// A loupe is a small magnifying glass used to look at diamonds.
+// These functions look at diamonds
+interface IDiamondLoupe {
+    /// These functions are expected to be called frequently
+    /// by tools.
+
+    struct Facet {
+        address facetAddress;
+        bytes4[] functionSelectors;
+    }
+
+    /// @notice Gets all facet addresses and their four byte function selectors.
+    /// @return facets_ Facet
+    function facets() external view returns (Facet[] memory facets_);
+
+    /// @notice Gets all the function selectors supported by a specific facet.
+    /// @param _facet The facet address.
+    /// @return facetFunctionSelectors_
+    function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetFunctionSelectors_);
+
+    /// @notice Get all the facet addresses used by a diamond.
+    /// @return facetAddresses_
+    function facetAddresses() external view returns (address[] memory facetAddresses_);
+
+    /// @notice Gets the facet that supports the given selector.
+    /// @dev If facet is not found return address(0).
+    /// @param _functionSelector The function selector.
+    /// @return facetAddress_ The facet address.
+    function facetAddress(bytes4 _functionSelector) external view returns (address facetAddress_);
+}
+</file>
+
+<file path="contracts/interfaces/IERC165.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+interface IERC165 {
+    /// @notice Query if a contract implements an interface
+    /// @param interfaceId The interface identifier, as specified in ERC-165
+    /// @dev Interface identification is specified in ERC-165. This function
+    ///  uses less than 30,000 gas.
+    /// @return `true` if the contract implements `interfaceID` and
+    ///  `interfaceID` is not 0xffffffff, `false` otherwise
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
+}
+</file>
+
+<file path="contracts/upgradeInitializers/DiamondInit.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+/******************************************************************************\
+* Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
+* EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
+*
+* Implementation of a diamond.
+/******************************************************************************/
+
+import {LibDiamond} from "../libraries/LibDiamond.sol";
+import { IDiamondLoupe } from "../interfaces/IDiamondLoupe.sol";
+import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
+import { IERC173 } from "../interfaces/IERC173.sol";
+import { IERC165 } from "../interfaces/IERC165.sol";
+
+// It is exapected that this contract is customized if you want to deploy your diamond
+// with data from a deployment script. Use the init function to initialize state variables
+// of your diamond. Add parameters to the init funciton if you need to.
+
+contract DiamondInit {    
+
+    // You can add parameters to this function in order to pass in 
+    // data to set your own state variables
+    function init() external {
+        // adding ERC165 data
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        ds.supportedInterfaces[type(IERC165).interfaceId] = true;
+        ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
+        ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC173).interfaceId] = true;
+
+        // add your own state variables 
+        // EIP-2535 specifies that the `diamondCut` function takes two optional 
+        // arguments: address _init and bytes calldata _calldata
+        // These arguments are used to execute an arbitrary function using delegatecall
+        // in order to set state variables in the diamond during deployment or an upgrade
+        // More info here: https://eips.ethereum.org/EIPS/eip-2535#diamond-interface 
+    }
+
+
+}
+</file>
+
+<file path="contracts/Diamond.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+/******************************************************************************\
+* Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
+* EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
+*
+* Implementation of a diamond.
+/******************************************************************************/
+
+import {LibDiamond} from "./libraries/LibDiamond.sol";
+import {IDiamondCut} from "./interfaces/IDiamondCut.sol";
+
+contract Diamond {
+    constructor(address _contractOwner, address _diamondCutFacet) payable {
+        LibDiamond.setContractOwner(_contractOwner);
+
+        // Add the diamondCut external function from the diamondCutFacet
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
+        bytes4[] memory functionSelectors = new bytes4[](1);
+        functionSelectors[0] = IDiamondCut.diamondCut.selector;
+        cut[0] = IDiamondCut.FacetCut({
+            facetAddress: _diamondCutFacet,
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: functionSelectors
+        });
+        LibDiamond.diamondCut(cut, address(0), "");
+    }
+
+    // Find facet for function that is called and execute the
+    // function if a facet is found and return any value.
+    fallback() external payable {
+        LibDiamond.DiamondStorage storage ds;
+        bytes32 position = LibDiamond.DIAMOND_STORAGE_POSITION;
+        // get diamond storage
+        assembly {
+            ds.slot := position
+        }
+        // get facet from function selector
+        address facet = ds.selectorToFacetAndPosition[msg.sig].facetAddress;
+        require(facet != address(0), "Diamond: Function does not exist");
+        // Execute external function from facet using delegatecall and return any value.
+        assembly {
+            // copy function selector and any arguments
+            calldatacopy(0, 0, calldatasize())
+            // execute function call using the facet
+            let result := delegatecall(gas(), facet, 0, calldatasize(), 0, 0)
+            // get any return value
+            returndatacopy(0, 0, returndatasize())
+            // return any return value or error back to the caller
+            switch result
+            case 0 {
+                revert(0, returndatasize())
+            }
+            default {
+                return(0, returndatasize())
+            }
+        }
+    }
+
+    //immutable function example
+    function example() public pure returns (string memory) {
+        return "THIS IS AN EXAMPLE OF AN IMMUTABLE FUNCTION";
+    }
+
+    receive() external payable {}
+}
+</file>
+
+<file path="script/DiamondUpgradeExample.s.sol">
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
+
+import "forge-std/Script.sol";
+import {IDiamondCut} from "../contracts/interfaces/IDiamondCut.sol";
+import {IDiamondLoupe} from "../contracts/interfaces/IDiamondLoupe.sol";
+import {DiamondUpgradeHelper} from "../test/helpers/DiamondUpgradeHelper.sol";
+
+contract DiamondUpgradeExample is Script, DiamondUpgradeHelper {
+    function run() external {
+        // Define all inputs explicitly here:
+        address diamond = address(0x000000000000000000000000000000000000dEaD); // TODO set
+
+        // Configure adds
+        address[] memory addFacetAddresses = new address[](0);
+        string[] memory addFacetNames = new string[](0);
+
+        // Configure replacements
+        address[] memory replaceFacetAddresses = new address[](0);
+        string[] memory replaceFacetNames = new string[](0);
+
+        // Configure removals
+        bytes4[] memory removeSelectors = new bytes4[](0);
+
+        // Optional init
+        address init = address(0);
+        bytes memory initCalldata = hex"";
+
+        // Build cuts
+        IDiamondCut.FacetCut[] memory addCuts = buildAddCutsByNames(
+            addFacetAddresses,
+            addFacetNames
+        );
+        IDiamondCut.FacetCut[] memory repCuts = buildReplaceCutsByNames(
+            IDiamondLoupe(diamond),
+            replaceFacetAddresses,
+            replaceFacetNames
+        );
+        uint256 extra = removeSelectors.length > 0 ? 1 : 0;
+        IDiamondCut.FacetCut[] memory cuts = new IDiamondCut.FacetCut[](
+            addCuts.length + repCuts.length + extra
+        );
+        uint256 k = 0;
+        for (uint256 i = 0; i < addCuts.length; i++) cuts[k++] = addCuts[i];
+        for (uint256 j = 0; j < repCuts.length; j++) cuts[k++] = repCuts[j];
+        if (removeSelectors.length > 0)
+            cuts[k++] = buildRemoveCut(removeSelectors);
+
+        // Execute
+        vm.startBroadcast();
+        executeDiamondCut(IDiamondCut(diamond), cuts, init, initCalldata);
+        vm.stopBroadcast();
+    }
+}
+</file>
+
+<file path="test/helpers/DiamondUpgradeHelper.sol">
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
+
+import "forge-std/Test.sol";
+import {IDiamondCut} from "../../contracts/interfaces/IDiamondCut.sol";
+import {IDiamondLoupe} from "../../contracts/interfaces/IDiamondLoupe.sol";
+import {DiamondUtils} from "./DiamondUtils.sol";
+
+// Helper for building and executing diamond cuts using Foundry + forge inspect selectors.
+abstract contract DiamondUpgradeHelper is DiamondUtils {
+    // Build an Add cut for a facet by name (all selectors discovered via forge inspect)
+    function buildAddCutByName(
+        address facetAddress,
+        string memory facetName
+    ) internal returns (IDiamondCut.FacetCut memory cut) {
+        bytes4[] memory selectors = generateSelectors(facetName);
+        cut = IDiamondCut.FacetCut({
+            facetAddress: facetAddress,
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: selectors
+        });
+    }
+
+    // Build Add cuts for multiple facets by names and addresses (arrays must match in length/order)
+    function buildAddCutsByNames(
+        address[] memory facetAddresses,
+        string[] memory facetNames
+    ) internal returns (IDiamondCut.FacetCut[] memory cuts) {
+        require(facetAddresses.length == facetNames.length, "len mismatch");
+        cuts = new IDiamondCut.FacetCut[](facetAddresses.length);
+        for (uint256 i = 0; i < facetAddresses.length; i++) {
+            cuts[i] = buildAddCutByName(facetAddresses[i], facetNames[i]);
+        }
+    }
+
+    // Build a Replace cut for a facet by name, filtering out selectors that would replace to the same address.
+    // Requires loupe support installed on the diamond.
+    function buildReplaceCutByName(
+        IDiamondLoupe loupe,
+        address facetAddress,
+        string memory facetName
+    ) internal returns (IDiamondCut.FacetCut memory cut) {
+        bytes4[] memory allSelectors = generateSelectors(facetName);
+        // Count only selectors that currently exist AND are mapped to a different facet
+        uint256 count = 0;
+        for (uint256 i = 0; i < allSelectors.length; i++) {
+            address current = loupe.facetAddress(allSelectors[i]);
+            if (current != address(0) && current != facetAddress) {
+                count++;
+            }
+        }
+        bytes4[] memory filtered = new bytes4[](count);
+        uint256 idx = 0;
+        for (uint256 i = 0; i < allSelectors.length; i++) {
+            address current = loupe.facetAddress(allSelectors[i]);
+            if (current != address(0) && current != facetAddress) {
+                filtered[idx++] = allSelectors[i];
+            }
+        }
+        cut = IDiamondCut.FacetCut({
+            facetAddress: facetAddress,
+            action: IDiamondCut.FacetCutAction.Replace,
+            functionSelectors: filtered
+        });
+    }
+
+    // Build Replace cuts for multiple facets by names and addresses.
+    function buildReplaceCutsByNames(
+        IDiamondLoupe loupe,
+        address[] memory facetAddresses,
+        string[] memory facetNames
+    ) internal returns (IDiamondCut.FacetCut[] memory cuts) {
+        require(facetAddresses.length == facetNames.length, "len mismatch");
+        cuts = new IDiamondCut.FacetCut[](facetAddresses.length);
+        for (uint256 i = 0; i < facetAddresses.length; i++) {
+            cuts[i] = buildReplaceCutByName(
+                loupe,
+                facetAddresses[i],
+                facetNames[i]
+            );
+        }
+    }
+
+    // Build an Add cut for selectors that are missing on the diamond.
+    function buildAddMissingCutByName(
+        IDiamondLoupe loupe,
+        address facetAddress,
+        string memory facetName
+    ) internal returns (IDiamondCut.FacetCut memory cut) {
+        bytes4[] memory allSelectors = generateSelectors(facetName);
+        uint256 count = 0;
+        for (uint256 i = 0; i < allSelectors.length; i++) {
+            if (loupe.facetAddress(allSelectors[i]) == address(0)) {
+                count++;
+            }
+        }
+        bytes4[] memory missing = new bytes4[](count);
+        uint256 idx = 0;
+        for (uint256 i = 0; i < allSelectors.length; i++) {
+            if (loupe.facetAddress(allSelectors[i]) == address(0)) {
+                missing[idx++] = allSelectors[i];
+            }
+        }
+        cut = IDiamondCut.FacetCut({
+            facetAddress: facetAddress,
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: missing
+        });
+    }
+
+    // Build both Replace and Add (missing) cuts to extend an existing facet implementation
+    // with new selectors while migrating existing ones to a new facet address.
+    function buildExtendCutsByName(
+        IDiamondLoupe loupe,
+        address facetAddress,
+        string memory facetName
+    ) internal returns (IDiamondCut.FacetCut[] memory cuts) {
+        IDiamondCut.FacetCut memory rep = buildReplaceCutByName(loupe, facetAddress, facetName);
+        IDiamondCut.FacetCut memory add = buildAddMissingCutByName(loupe, facetAddress, facetName);
+
+        bool hasRep = rep.functionSelectors.length > 0;
+        bool hasAdd = add.functionSelectors.length > 0;
+        uint256 n = (hasRep ? 1 : 0) + (hasAdd ? 1 : 0);
+        cuts = new IDiamondCut.FacetCut[](n);
+        uint256 k = 0;
+        if (hasRep) cuts[k++] = rep;
+        if (hasAdd) cuts[k++] = add;
+    }
+
+    // Build a Remove cut for a list of selectors.
+    function buildRemoveCut(
+        bytes4[] memory selectors
+    ) internal pure returns (IDiamondCut.FacetCut memory cut) {
+        cut = IDiamondCut.FacetCut({
+            facetAddress: address(0),
+            action: IDiamondCut.FacetCutAction.Remove,
+            functionSelectors: selectors
+        });
+    }
+
+    // Execute a diamond cut with optional init.
+    function executeDiamondCut(
+        IDiamondCut diamond,
+        IDiamondCut.FacetCut[] memory cuts,
+        address init,
+        bytes memory initCalldata
+    ) internal {
+        diamond.diamondCut(cuts, init, initCalldata);
+    }
+}
+</file>
+
+<file path=".gitignore">
+out
+artifacts
+node_modules
+cache
+</file>
+
+<file path="remappings.txt">
+ds-test/=lib/forge-std/lib/ds-test/src/
+forge-std/=lib/forge-std/src/
+solidity-stringutils/=lib/solidity-stringutils/
+</file>
+
+<file path="contracts/interfaces/IERC173.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+/// @title ERC-173 Contract Ownership Standard
+///  Note: the ERC-165 identifier for this interface is 0x7f5828d0
+/* is ERC165 */
+interface IERC173 {
+    /// @notice Get the address of the owner
+    /// @return owner_ The address of the owner.
+    function owner() external view returns (address owner_);
+
+    /// @notice Set the address of the new owner of the contract
+    /// @dev Set _newOwner to address(0) to renounce any ownership.
+    /// @param _newOwner The address of the new owner of the contract
+    function transferOwnership(address _newOwner) external;
+}
+</file>
+
+<file path="contracts/libraries/LibDiamond.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+/******************************************************************************\
+* Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
+* EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
+/******************************************************************************/
+import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
+
+library LibDiamond {
+    error InValidFacetCutAction();
+    error NotDiamondOwner();
+    error NoSelectorsInFacet();
+    error NoZeroAddress();
+    error SelectorExists(bytes4 selector);
+    error SameSelectorReplacement(bytes4 selector);
+    error MustBeZeroAddress();
+    error NoCode();
+    error NonExistentSelector(bytes4 selector);
+    error ImmutableFunction(bytes4 selector);
+    error NonEmptyCalldata();
+    error EmptyCalldata();
+    error InitCallFailed();
+    bytes32 constant DIAMOND_STORAGE_POSITION =
+        keccak256("diamond.standard.diamond.storage");
+
+    struct FacetAddressAndPosition {
+        address facetAddress;
+        uint96 functionSelectorPosition; // position in facetFunctionSelectors.functionSelectors array
+    }
+
+    struct FacetFunctionSelectors {
+        bytes4[] functionSelectors;
+        uint256 facetAddressPosition; // position of facetAddress in facetAddresses array
+    }
+
+    struct DiamondStorage {
+        // maps function selector to the facet address and
+        // the position of the selector in the facetFunctionSelectors.selectors array
+        mapping(bytes4 => FacetAddressAndPosition) selectorToFacetAndPosition;
+        // maps facet addresses to function selectors
+        mapping(address => FacetFunctionSelectors) facetFunctionSelectors;
+        // facet addresses
+        address[] facetAddresses;
+        // Used to query if a contract implements an interface.
+        // Used to implement ERC-165.
+        mapping(bytes4 => bool) supportedInterfaces;
+        // owner of the contract
+        address contractOwner;
+    }
+
+    function diamondStorage()
+        internal
+        pure
+        returns (DiamondStorage storage ds)
+    {
+        bytes32 position = DIAMOND_STORAGE_POSITION;
+        assembly {
+            ds.slot := position
+        }
+    }
+
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
+
+    function setContractOwner(address _newOwner) internal {
+        DiamondStorage storage ds = diamondStorage();
+        address previousOwner = ds.contractOwner;
+        ds.contractOwner = _newOwner;
+        emit OwnershipTransferred(previousOwner, _newOwner);
+    }
+
+    function contractOwner() internal view returns (address contractOwner_) {
+        contractOwner_ = diamondStorage().contractOwner;
+    }
+
+    function enforceIsContractOwner() internal view {
+        if (msg.sender != diamondStorage().contractOwner)
+            revert NotDiamondOwner();
+    }
+
+    event DiamondCut(
+        IDiamondCut.FacetCut[] _diamondCut,
+        address _init,
+        bytes _calldata
+    );
+
+    // Internal function version of diamondCut
+    function diamondCut(
+        IDiamondCut.FacetCut[] memory _diamondCut,
+        address _init,
+        bytes memory _calldata
+    ) internal {
+        for (
+            uint256 facetIndex;
+            facetIndex < _diamondCut.length;
+            facetIndex++
+        ) {
+            IDiamondCut.FacetCutAction action = _diamondCut[facetIndex].action;
+            if (action == IDiamondCut.FacetCutAction.Add) {
+                addFunctions(
+                    _diamondCut[facetIndex].facetAddress,
+                    _diamondCut[facetIndex].functionSelectors
+                );
+            } else if (action == IDiamondCut.FacetCutAction.Replace) {
+                replaceFunctions(
+                    _diamondCut[facetIndex].facetAddress,
+                    _diamondCut[facetIndex].functionSelectors
+                );
+            } else if (action == IDiamondCut.FacetCutAction.Remove) {
+                removeFunctions(
+                    _diamondCut[facetIndex].facetAddress,
+                    _diamondCut[facetIndex].functionSelectors
+                );
+            } else {
+                revert InValidFacetCutAction();
+            }
+        }
+        emit DiamondCut(_diamondCut, _init, _calldata);
+        initializeDiamondCut(_init, _calldata);
+    }
+
+    function addFunctions(
+        address _facetAddress,
+        bytes4[] memory _functionSelectors
+    ) internal {
+        if (_functionSelectors.length <= 0) revert NoSelectorsInFacet();
+        DiamondStorage storage ds = diamondStorage();
+        if (_facetAddress == address(0)) revert NoZeroAddress();
+        uint96 selectorPosition = uint96(
+            ds.facetFunctionSelectors[_facetAddress].functionSelectors.length
+        );
+        // add new facet address if it does not exist
+        if (selectorPosition == 0) {
+            addFacet(ds, _facetAddress);
+        }
+        for (
+            uint256 selectorIndex;
+            selectorIndex < _functionSelectors.length;
+            selectorIndex++
+        ) {
+            bytes4 selector = _functionSelectors[selectorIndex];
+            address oldFacetAddress = ds
+                .selectorToFacetAndPosition[selector]
+                .facetAddress;
+            if (oldFacetAddress != address(0)) revert SelectorExists(selector);
+            addFunction(ds, selector, selectorPosition, _facetAddress);
+            selectorPosition++;
+        }
+    }
+
+    function replaceFunctions(
+        address _facetAddress,
+        bytes4[] memory _functionSelectors
+    ) internal {
+        if (_functionSelectors.length <= 0) revert NoSelectorsInFacet();
+        DiamondStorage storage ds = diamondStorage();
+        if (_facetAddress == address(0)) revert NoZeroAddress();
+        uint96 selectorPosition = uint96(
+            ds.facetFunctionSelectors[_facetAddress].functionSelectors.length
+        );
+        // add new facet address if it does not exist
+        if (selectorPosition == 0) {
+            addFacet(ds, _facetAddress);
+        }
+        for (
+            uint256 selectorIndex;
+            selectorIndex < _functionSelectors.length;
+            selectorIndex++
+        ) {
+            bytes4 selector = _functionSelectors[selectorIndex];
+            address oldFacetAddress = ds
+                .selectorToFacetAndPosition[selector]
+                .facetAddress;
+            if (oldFacetAddress == _facetAddress)
+                revert SameSelectorReplacement(selector);
+            removeFunction(ds, oldFacetAddress, selector);
+            addFunction(ds, selector, selectorPosition, _facetAddress);
+            selectorPosition++;
+        }
+    }
+
+    function removeFunctions(
+        address _facetAddress,
+        bytes4[] memory _functionSelectors
+    ) internal {
+        if (_functionSelectors.length <= 0) revert NoSelectorsInFacet();
+        DiamondStorage storage ds = diamondStorage();
+        // if function does not exist then do nothing and return
+        if (_facetAddress != address(0)) revert MustBeZeroAddress();
+        for (
+            uint256 selectorIndex;
+            selectorIndex < _functionSelectors.length;
+            selectorIndex++
+        ) {
+            bytes4 selector = _functionSelectors[selectorIndex];
+            address oldFacetAddress = ds
+                .selectorToFacetAndPosition[selector]
+                .facetAddress;
+            removeFunction(ds, oldFacetAddress, selector);
+        }
+    }
+
+    function addFacet(
+        DiamondStorage storage ds,
+        address _facetAddress
+    ) internal {
+        enforceHasContractCode(_facetAddress);
+        ds.facetFunctionSelectors[_facetAddress].facetAddressPosition = ds
+            .facetAddresses
+            .length;
+        ds.facetAddresses.push(_facetAddress);
+    }
+
+    function addFunction(
+        DiamondStorage storage ds,
+        bytes4 _selector,
+        uint96 _selectorPosition,
+        address _facetAddress
+    ) internal {
+        ds
+            .selectorToFacetAndPosition[_selector]
+            .functionSelectorPosition = _selectorPosition;
+        ds.facetFunctionSelectors[_facetAddress].functionSelectors.push(
+            _selector
+        );
+        ds.selectorToFacetAndPosition[_selector].facetAddress = _facetAddress;
+    }
+
+    function removeFunction(
+        DiamondStorage storage ds,
+        address _facetAddress,
+        bytes4 _selector
+    ) internal {
+        if (_facetAddress == address(0)) revert NonExistentSelector(_selector);
+        // an immutable function is a function defined directly in a diamond
+        if (_facetAddress == address(this)) revert ImmutableFunction(_selector);
+        // replace selector with last selector, then delete last selector
+        uint256 selectorPosition = ds
+            .selectorToFacetAndPosition[_selector]
+            .functionSelectorPosition;
+        uint256 lastSelectorPosition = ds
+            .facetFunctionSelectors[_facetAddress]
+            .functionSelectors
+            .length - 1;
+        // if not the same then replace _selector with lastSelector
+        if (selectorPosition != lastSelectorPosition) {
+            bytes4 lastSelector = ds
+                .facetFunctionSelectors[_facetAddress]
+                .functionSelectors[lastSelectorPosition];
+            ds.facetFunctionSelectors[_facetAddress].functionSelectors[
+                    selectorPosition
+                ] = lastSelector;
+            ds
+                .selectorToFacetAndPosition[lastSelector]
+                .functionSelectorPosition = uint96(selectorPosition);
+        }
+        // delete the last selector
+        ds.facetFunctionSelectors[_facetAddress].functionSelectors.pop();
+        delete ds.selectorToFacetAndPosition[_selector];
+
+        // if no more selectors for facet address then delete the facet address
+        if (lastSelectorPosition == 0) {
+            // replace facet address with last facet address and delete last facet address
+            uint256 lastFacetAddressPosition = ds.facetAddresses.length - 1;
+            uint256 facetAddressPosition = ds
+                .facetFunctionSelectors[_facetAddress]
+                .facetAddressPosition;
+            if (facetAddressPosition != lastFacetAddressPosition) {
+                address lastFacetAddress = ds.facetAddresses[
+                    lastFacetAddressPosition
+                ];
+                ds.facetAddresses[facetAddressPosition] = lastFacetAddress;
+                ds
+                    .facetFunctionSelectors[lastFacetAddress]
+                    .facetAddressPosition = facetAddressPosition;
+            }
+            ds.facetAddresses.pop();
+            delete ds
+                .facetFunctionSelectors[_facetAddress]
+                .facetAddressPosition;
+        }
+    }
+
+    function initializeDiamondCut(
+        address _init,
+        bytes memory _calldata
+    ) internal {
+        if (_init == address(0)) {
+            if (_calldata.length > 0) revert NonEmptyCalldata();
+        } else {
+            if (_calldata.length == 0) revert EmptyCalldata();
+            if (_init != address(this)) {
+                enforceHasContractCode(_init);
+            }
+            (bool success, bytes memory error) = _init.delegatecall(_calldata);
+            if (!success) {
+                if (error.length > 0) {
+                    // bubble up the error
+                    revert(string(error));
+                } else {
+                    revert InitCallFailed();
+                }
+            }
+        }
+    }
+
+    function enforceHasContractCode(address _contract) internal view {
+        uint256 contractSize;
+        assembly {
+            contractSize := extcodesize(_contract)
+        }
+        if (contractSize <= 0) revert NoCode();
+    }
+}
+</file>
+
+<file path="test/helpers/DiamondUtils.sol">
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
+
+import "forge-std/Test.sol";
+import "solidity-stringutils/strings.sol";
+
+abstract contract DiamondUtils is Test {
+    using strings for *;
+
+    function generateSelectors(
+        string memory _facetName
+    ) internal returns (bytes4[] memory selectors) {
+        // get JSON string of contract methods
+        string[] memory cmd = new string[](5);
+        cmd[0] = "forge";
+        cmd[1] = "inspect";
+        cmd[2] = _facetName;
+        cmd[3] = "methods";
+        cmd[4] = "--json";
+        bytes memory res = vm.ffi(cmd);
+        string memory st = string(res);
+
+        // extract function signatures and take first 4 bytes of keccak
+        strings.slice memory s = st.toSlice();
+        // Skip any leading logs by seeking the first JSON brace
+        s.find("{".toSlice());
+
+        strings.slice memory colon = ":".toSlice();
+        strings.slice memory comma = ",".toSlice();
+        strings.slice memory dbquote = '"'.toSlice();
+        selectors = new bytes4[]((s.count(colon)));
+
+        for (uint i = 0; i < selectors.length; i++) {
+            s.split(dbquote); // advance to next doublequote
+            // split at colon, extract string up to next doublequote for methodname
+            strings.slice memory method = s.split(colon).until(dbquote);
+            selectors[i] = bytes4(method.keccak());
+            s.split(comma).until(dbquote); // advance s to the next comma
+        }
+        return selectors;
+    }
+}
+</file>
+
+<file path=".gitmodules">
+[submodule "lib/forge-std"]
+	path = lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "lib/solidity-stringutils"]
+	path = lib/solidity-stringutils
+	url = https://github.com/Arachnid/solidity-stringutils
+</file>
+
+<file path="foundry.toml">
+[profile.default]
+src = 'contracts'
+out = 'out'
+libs = [
+    'lib'
+]
+ffi=true
+verbosity=5
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config
+</file>
+
+<file path="test/deployDiamond.t.sol">
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
+
+import "../contracts/interfaces/IDiamondCut.sol";
+import "../contracts/facets/DiamondCutFacet.sol";
+import "../contracts/facets/DiamondLoupeFacet.sol";
+import "../contracts/facets/OwnershipFacet.sol";
+import "../contracts/Diamond.sol";
+
+import "./helpers/DiamondUpgradeHelper.sol";
+
+contract DiamondDeployer is DiamondUpgradeHelper {
+    //contract types of facets to be deployed
+    Diamond diamond;
+    DiamondCutFacet dCutFacet;
+    DiamondLoupeFacet dLoupe;
+    OwnershipFacet ownerF;
+
+    function testDeployDiamond() public {
+        //deploy facets
+        dCutFacet = new DiamondCutFacet();
+        diamond = new Diamond(address(this), address(dCutFacet));
+        dLoupe = new DiamondLoupeFacet();
+        ownerF = new OwnershipFacet();
+
+        // Upgrade diamond with facets using helper (one-shot add cuts)
+        address[] memory addAddrs = new address[](2);
+        addAddrs[0] = address(dLoupe);
+        addAddrs[1] = address(ownerF);
+
+        string[] memory names = new string[](2);
+        names[0] = "DiamondLoupeFacet";
+        names[1] = "OwnershipFacet";
+
+        IDiamondCut.FacetCut[] memory cuts = buildAddCutsByNames(
+            addAddrs,
+            names
+        );
+        executeDiamondCut(IDiamondCut(address(diamond)), cuts, address(0), "");
+
+        //call a function
+        DiamondLoupeFacet(address(diamond)).facetAddresses();
+    }
+}
+</file>
+
+<file path="README.md">
+[![Mentioned in Awesome Foundry](https://awesome.re/mentioned-badge-flat.svg)](https://github.com/crisgarner/awesome-foundry)
+
+# Foundry + Hardhat Diamonds
+
+This is a mimimal template for [Diamonds](https://github.com/ethereum/EIPs/issues/2535) which allows facet selectors to be generated on the go in solidity tests!
+
+## Installation
+
+- Clone this repo
+- Install dependencies
+
+```bash
+$ yarn && forge update
+```
+
+### Compile
+
+```bash
+$ npx hardhat compile
+```
+
+## Deployment
+
+### Hardhat
+
+```bash
+$ npx hardhat run scripts/deploy.js
+```
+
+### Foundry
+
+```bash
+$ forge t
+```
+
+`Note`: A lot of improvements are still needed so contributions are welcome!!
+
+Bonus: The [DiamondLoupefacet](contracts/facets/DiamondLoupeFacet.sol) uses an updated [LibDiamond](contracts/libraries//LibDiamond.sol) which utilises solidity custom errors to make debugging easier especially when upgrading diamonds. Take it for a spin!!
+
+Need some more clarity? message me [on twitter](https://twitter.com/Timidan_x), Or join the [EIP-2535 Diamonds Discord server](https://discord.gg/kQewPw2)
+
+## Diamond Upgrade Helper (Foundry)
+
+This repository includes a Foundry-based helper and script that make it easy to perform EIP-2535 diamond upgrades in tests and scripts without hand-assembling selector arrays.
+
+### Overview
+
+- `test/helpers/DiamondUtils.sol` dynamically generates function selectors using `forge inspect <Facet> methods --json` and parses them inside Solidity via FFI.
+- `test/helpers/DiamondUpgradeHelper.sol` builds one-shot Add/Replace/Remove cuts and executes diamond upgrades via `IDiamondCut`.
+- `script/DiamondUpgrade.s.sol` is a generic Foundry script to upgrade an existing diamond using environment variables.
+
+> Note: FFI must be enabled in `foundry.toml` (`ffi=true`) for selector generation.
+
+### Installation/Setup
+
+- Ensure remappings include `forge-std` and `solidity-stringutils` (already configured in this repo):
+  - See `remappings.txt` and `foundry.toml`.
+- Ensure `ffi=true` in `foundry.toml`.
+
+### Helper APIs
+
+Located at `test/helpers/DiamondUpgradeHelper.sol` (import and inherit in your test/script).
+
+- `buildAddCutByName(address facetAddress, string facetName)`
+  - Generates all selectors of `facetName` and returns one Add cut.
+- `buildAddCutsByNames(address[] facetAddresses, string[] facetNames)`
+  - Batch of Add cuts; arrays must match in length and order.
+- `buildReplaceCutByName(IDiamondLoupe loupe, address facetAddress, string facetName)`
+  - Computes selectors for `facetName` and returns a Replace cut for selectors that currently exist on the diamond and point to a different facet address.
+- `buildReplaceCutsByNames(IDiamondLoupe loupe, address[] facetAddresses, string[] facetNames)`
+  - Batch replacement; see semantics above.
+- `buildAddMissingCutByName(IDiamondLoupe loupe, address facetAddress, string facetName)`
+  - Add-only for selectors that do not already exist on the diamond.
+- `buildExtendCutsByName(IDiamondLoupe loupe, address facetAddress, string facetName)`
+  - Returns a 1–2 element array combining Replace (existing selectors) and Add (new selectors) to extend a facet implementation with new functions.
+- `buildRemoveCut(bytes4[] selectors)`
+  - Returns a Remove cut for the given selectors.
+- `executeDiamondCut(IDiamondCut diamond, IDiamondCut.FacetCut[] cuts, address init, bytes initCalldata)`
+  - Executes a diamond cut with optional init call.
+
+### Typical Scenarios
+
+1. Add new facets to a fresh or partially configured diamond:
+
+```solidity
+address[] memory addAddrs = new address[](2);
+addAddrs[0] = address(loupeFacet);
+addAddrs[1] = address(ownershipFacet);
+
+string[] memory names = new string[](2);
+names[0] = "DiamondLoupeFacet";
+names[1] = "OwnershipFacet";
+
+IDiamondCut.FacetCut[] memory cuts = buildAddCutsByNames(addAddrs, names);
+executeDiamondCut(IDiamondCut(address(diamond)), cuts, address(0), "");
+```
+
+2. Extend an existing facet (replace 3 existing selectors and add 1 new selector):
+
+```solidity
+// newFacet implements the same 3 old functions and 1 new
+IDiamondCut.FacetCut[] memory cuts = buildExtendCutsByName(
+    IDiamondLoupe(address(diamond)),
+    address(newFacet),
+    "YourFacetName"
+);
+executeDiamondCut(IDiamondCut(address(diamond)), cuts, address(0), "");
+```
+
+3. Replace an existing facet implementation (only for selectors that already exist on the diamond):
+
+```solidity
+IDiamondCut.FacetCut[] memory cuts = new IDiamondCut.FacetCut[](1);
+cuts[0] = buildReplaceCutByName(IDiamondLoupe(address(diamond)), address(newFacet), "YourFacetName");
+executeDiamondCut(IDiamondCut(address(diamond)), cuts, address(0), "");
+```
+
+4. Remove selectors:
+
+```solidity
+bytes4[] memory toRemove = new bytes4[](2);
+toRemove[0] = YourFacet.oldFunction.selector;
+toRemove[1] = bytes4(keccak256("someSig(uint256,bool)"));
+
+IDiamondCut.FacetCut[] memory cuts = new IDiamondCut.FacetCut[](1);
+cuts[0] = buildRemoveCut(toRemove);
+executeDiamondCut(IDiamondCut(address(diamond)), cuts, address(0), "");
+```
+
+### Scripted Upgrades (Foundry Script)
+
+Use `script/DiamondUpgradeExample.s.sol` with hardcoded configuration inside `run()`.
+
+- Open `script/DiamondUpgrade.s.sol` and set:
+  - `diamond` to your target diamond address
+  - `addFacetAddresses` and `addFacetNames` for new facets to add
+  - `replaceFacetAddresses` and `replaceFacetNames` for facets whose existing selectors should be migrated
+  - `removeSelectors` for selectors to remove (optional)
+  - `init` and `initCalldata` if you need an initialization call (optional)
+
+Example (inside `run()`):
+
+```solidity
+address diamond = 0x000000000000000000000000000000000000dEaD;
+address[] memory addFacetAddresses = new address[](2);
+addFacetAddresses[0] = 0x1111111111111111111111111111111111111111;
+addFacetAddresses[1] = 0x2222222222222222222222222222222222222222;
+string[] memory addFacetNames = new string[](2);
+addFacetNames[0] = "DiamondLoupeFacet";
+addFacetNames[1] = "OwnershipFacet";
+// Optional replace & remove
+address[] memory replaceFacetAddresses = new address[](0);
+string[] memory replaceFacetNames = new string[](0);
+bytes4[] memory removeSelectors = new bytes4[](0);
+address init = address(0);
+bytes memory initCalldata = hex"";
+```
+
+Run the script with broadcast:
+
+```bash
+forge script script/DiamondUpgradeExample.s.sol:DiamondUpgradeExample \
+  --rpc-url $RPC_URL \
+  --private-key $PK \
+  --broadcast
+```
+
+No environment variables or CLI parameters are required; all configuration is set within the script file.
+
+### Notes & Best Practices
+
+- The helper relies on the diamond implementing `IDiamondLoupe` for replace/add-missing/extend logic to work correctly.
+- `buildReplaceCutByName` filters out selectors that are either missing on the diamond or already mapped to the provided facet address, avoiding `SameSelectorReplacement` reverts.
+- `buildAddMissingCutByName` ensures only new selectors (not present on the diamond) are added.
+- `buildExtendCutsByName` combines both behaviors to migrate existing selectors to a new facet and add new selectors in one call.
+- For fresh deployments, prefer add-only; for migrations, prefer extend or replace.
+- If you need per-selector control, you can manually filter the arrays returned by `generateSelectors(facetName)` in your own helper or use the signature hash directly.
+
+### Troubleshooting
+
+- Empty selector arrays cause `NoSelectorsInFacet()` reverts. Ensure your cuts contain at least one selector.
+- Ensure facet names match the contract names compiled in your repo.
+- Ensure FFI is enabled and `forge` is available on PATH; `forge inspect` is invoked from Solidity via `vm.ffi`.
+- On very large scripts, if you hit "stack too deep", refactor into smaller functions (the provided script already does this).
+</file>
+
+</files>
